@@ -1,8 +1,8 @@
 use axum::{
-    error_handling::HandleErrorLayer, extract::{Extension}, http::StatusCode, routing::get,
-    BoxError, Router
+    error_handling::HandleErrorLayer, extract::Extension, http::StatusCode, routing::get, BoxError,
+    Router,
 };
-use mauth_client::{MAuthValidationError, tower::MAuthValidationLayer};
+use mauth_client::{tower::MAuthValidationLayer, MAuthValidationError};
 use tower::ServiceBuilder;
 use uuid::Uuid;
 
@@ -14,7 +14,7 @@ async fn main() {
         .layer(mauth_layer);
 
     let app = Router::new()
-        .route("/", get(mauth_hello_world))
+        .route("/", get(mauth_hello_world).post(mauth_post))
         .layer(mauth_error_layer);
 
     axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
@@ -32,4 +32,12 @@ async fn handle_mauth_error(err: BoxError) -> (StatusCode, String) {
 
 async fn mauth_hello_world(Extension(app_uuid): Extension<Uuid>) -> String {
     format!("Hello World, app UUID is {}", app_uuid).to_string()
+}
+
+async fn mauth_post(Extension(app_uuid): Extension<Uuid>, body: String) -> String {
+    format!(
+        "Got a signed post request from app UUID {} with body '{}'",
+        app_uuid, body
+    )
+    .to_string()
 }
