@@ -2,9 +2,8 @@ use axum::{
     error_handling::HandleErrorLayer, extract::Extension, http::StatusCode, routing::get, BoxError,
     Router,
 };
-use mauth_client::{tower::MAuthValidationLayer, MAuthValidationError};
+use mauth_client::{tower::MAuthValidationLayer, MAuthValidationError, ValidatedRequestDetails};
 use tower::ServiceBuilder;
-use uuid::Uuid;
 
 #[tokio::main]
 async fn main() {
@@ -30,14 +29,14 @@ async fn handle_mauth_error(err: BoxError) -> (StatusCode, String) {
     }
 }
 
-async fn mauth_hello_world(Extension(app_uuid): Extension<Uuid>) -> String {
-    format!("Hello World, app UUID is {}", app_uuid).to_string()
+async fn mauth_hello_world(Extension(rd): Extension<ValidatedRequestDetails>) -> String {
+    format!("Hello World, app UUID is {}", rd.app_uuid).to_string()
 }
 
-async fn mauth_post(Extension(app_uuid): Extension<Uuid>, body: String) -> String {
+async fn mauth_post(Extension(rd): Extension<ValidatedRequestDetails>, body: String) -> String {
     format!(
         "Got a signed post request from app UUID {} with body '{}'",
-        app_uuid, body
+        rd.app_uuid, body
     )
     .to_string()
 }
